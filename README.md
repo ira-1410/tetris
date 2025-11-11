@@ -19,7 +19,7 @@ A recreation of the classic Tetris game entirely in Java with Java AWT/Swing.
 ## Key Features
 1. **Collision Detection**: Detecting when a tetromino collides with the boundaries of the grid or with other pieces, before moving or rotating it.
 2. **Line Clearing**: Checking for completed lines and removing them from the grid.
-3. **Score Calculation**: Tracking the score, with 10 points for each line cleared, and 1 point for each manual drop of a tetromino (pressing the down key).
+3. **Score Calculation**: Tracking the score, with 30 points for each line cleared, and 1 point for each manual drop of a tetromino (pressing the down key).
 4. **Increasing Difficulty**: Blocks start falling faster as the game continues.
 
 ## Project Structure

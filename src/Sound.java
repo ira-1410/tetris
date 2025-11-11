@@ -34,13 +34,10 @@ public class Sound {
     }
 
     public void stop() {
-        if (clip != null && clip.isRunning()) {
-            clip.stop();
-        }
+        if (clip != null && clip.isRunning()) clip.stop();
     }
     public void setVolume(float decibels) {
         if (gainControl != null) {
-            // Clamp between min and max supported by the system
             decibels = Math.max(gainControl.getMinimum(), Math.min(decibels, gainControl.getMaximum()));
             gainControl.setValue(decibels);
         }

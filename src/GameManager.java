@@ -5,12 +5,13 @@ import java.awt.*;
 import java.util.Random;
 import java.util.ArrayList;
 
-
 public class GameManager {
+    // game states - initialize to waiting 
     public enum GameState {
         WAITING, PLAYING, PAUSED, GAME_OVER
     } public static GameState state = GameState.WAITING;
 
+    //initialize sound effects
     static Sound rowClearSound = new Sound("row-clear.wav");
     static Sound gameOverSound = new Sound("game-over.wav");
     static Sound bgMusic = new Sound("background.wav");
@@ -22,6 +23,8 @@ public class GameManager {
     public final int height = 600; //20 rows
     public static int topY, bottomY, leftX, rightX;
     public static int dropInterval = 50; //frames
+
+    //initialize scores to 0
     public static int highScore = 0;
     public static int score = 0;
 
@@ -31,6 +34,7 @@ public class GameManager {
     Tetromino nextMino;
     final int nextX, nextY;
 
+    // pile is where we'll store the previous inactive blocks
     public static ArrayList<Block> pile = new ArrayList<>();
 
 
@@ -42,18 +46,20 @@ public class GameManager {
         topY = 50;
         bottomY = topY+height;
 
+        //starting positions for playable tetromino & next tetromino
         startX= leftX+ (width/2) - Block.size;
         startY= topY + Block.size;
-
-        nextX = rightX + 175;
+        nextX = rightX + 125;
         nextY = topY + 500;
 
+        //initialize playable tetromino & next tetromino
         currMino = pickRandomTetromino();
         currMino.setXY(startX, startY);
         nextMino = pickRandomTetromino();
         nextMino.setXY(nextX, nextY);
     }
 
+    //function to pick a random tetromino
     public Tetromino pickRandomTetromino() {
         int i = new Random().nextInt(7);
         switch (i) {
@@ -68,28 +74,28 @@ public class GameManager {
         }
     }
 
-
     public void update() {
         if (state != GameState.PLAYING) return;
         if (currMino==null) return;
 
         // blocks start dropping faster as the score gets higher
-        int factor = (int) (score/500);
-        dropInterval = 50 - (int)(score/500) *5;
+        dropInterval = 50 - (int)(score/750) *5;
         if (dropInterval<=0) dropInterval = 7; //capped at drop per 10 frames
 
+        //if the current block has been placed
         if (!currMino.active) {
             for (int i=0; i<4; i++) pile.add(currMino.b[i]);
 
-            //game over
+            //check for game over
             if (currMino.b[0].x == startX && currMino.b[0].y == startY) {
                 bgMusic.stop();
                 state = GameState.GAME_OVER;
-                updateHighScore();
+                if (score>=highScore) highScore = score;
                 gameOverSound.play();
                 return;
             }
 
+            //move onto next block
             currMino.deactivating= false;
             currMino = nextMino;
             currMino.setXY(startX, startY);
@@ -98,6 +104,7 @@ public class GameManager {
             checkRows();
 
         } else {
+            // if it hasn't been placed yet
             currMino.update();
         }
     }
@@ -106,23 +113,28 @@ public class GameManager {
         int x= leftX;
         int y= topY;
         int blocks = 0;
+        //for all rows
         while (x<rightX && y < bottomY) {
+            // count blocks in the row
             for (int i=0; i< pile.size(); i++) {
                 if (pile.get(i).x == x && pile.get(i).y ==y) blocks++;
             }
             
             x+=Block.size;
             if (x==rightX) {
+                // there are 10 columns so if blocks=10, the row is filled
                 if (blocks==10) {
                     rowClearSound.play();
-                    score += 10;
+                    score += 30; //increase score
+                    //remove the row that was filled
                     for (int i=pile.size()-1 ; i >= 0; i--) {
                         if (pile.get(i).y == y) pile.remove(i);
-                    }
+                    } // shift down the rows above it
                     for (int i=0; i<pile.size(); i++) {
                         if (pile.get(i).y < y) pile.get(i).y += Block.size;
                     }
                 }
+                //update counters
                 blocks = 0;
                 x= leftX;
                 y+=Block.size;
@@ -131,52 +143,56 @@ public class GameManager {
     }
 
     public void draw(Graphics2D g2) {
+        //draw main area + next block waiting area
         g2.setColor(Color.white);
         g2.drawRect(leftX-2, topY-2, width+4, height+4);
-        g2.drawRect(rightX +100, bottomY - 200, 200, 200);
+        g2.drawRect(rightX +50, bottomY - 200, 200, 200);
         g2.setFont(new Font("Arial", Font.BOLD, 25));
-        g2.drawString("NEXT", rightX+165, bottomY-170);
+        g2.drawString("NEXT", rightX+115, bottomY-170);
+
+        //display scores
         g2.drawString("Score: " + score, rightX+20, topY+30);
         g2.drawString("High Score: " + highScore, rightX+20, topY + 60);
-        g2.setFont(new Font("Arial", Font.BOLD, 15));
-        g2.drawString("Use Arrows or WASD to play", leftX-250, topY+30);
-        g2.drawString("Press X to drop block", leftX-250, topY+50);
-        g2.drawString("Press SPACE to pause", leftX-250, topY+70);
-        g2.drawString("Press R to restart", leftX-250, topY+90);
 
+        //display instructions
+        g2.setFont(new Font("Arial", Font.BOLD, 15));
+        g2.drawString("Use Arrows or WASD to play", leftX-225, topY+20);
+        g2.drawString("Press X or SHIFT to drop", leftX-225, topY+40);
+        g2.drawString("Press SPACE to pause", leftX-225, topY+60);
+        g2.drawString("Press R to restart", leftX-225, topY+80);
+
+        //draw all blocks, i.e. current, next, previous tetrominos
         if (currMino!=null) currMino.draw(g2);
         nextMino.draw(g2);
         for (Block b : pile)  b.draw(g2);
 
+        // display waiting state
         if (state == GameState.WAITING) {
             g2.setFont(new Font("Arial", Font.BOLD, 30));
             g2.drawString("[SPACE] to Start", leftX+30, topY + height/2);
-         } else if (state == GameState.PAUSED) {
+        } 
+        //display paused state
+        else if (state == GameState.PAUSED) {
             g2.setFont(new Font("Arial", Font.BOLD, 40));
             g2.drawString("PAUSED", leftX+70, topY + height/2);
-        } else if (state == GameState.GAME_OVER) {
+        } 
+        //display game over state
+        else if (state == GameState.GAME_OVER) {
             g2.setFont(new Font("Arial", Font.BOLD, 40));
             g2.drawString("GAME OVER", leftX + 30, topY + height/2);
             g2.setFont(new Font("Arial", Font.PLAIN, 20));
         }
     }
 
-    public void updateHighScore(){
-        if (score>=highScore) {
-            highScore = score;
-        }
-    }
-
+    // call when R key is pressed - reset everything
     public void restart() {
         bgMusic.stop();
         pile.clear();
         score = 0;
         state = GameState.PLAYING;
-        // Reset tetrominos
         currMino = null;
         nextMino = null;
         GamePanel.gameManager = new GameManager();
     }
-
 
 }
