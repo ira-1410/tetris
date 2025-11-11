@@ -26,9 +26,9 @@ A recreation of the classic Tetris game entirely in Java with Java AWT/Swing.
 `/src` files:
 - Main.java
 - GamePanel.java is a JPanel to draw and run the game.
-– GameManager.java implements the game logic
-– KeyEventHandler.java is the Key Listener
-– Sound.java is a controller the background music and sound effects.
+- GameManager.java implements the game logic
+- KeyEventHandler.java is the Key Listener
+- Sound.java is a controller the background music and sound effects.
 
 `/tetromino` files:
 - Block.java is the building block extending Rectangle
